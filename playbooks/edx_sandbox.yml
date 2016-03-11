@@ -37,10 +37,7 @@
     - { role: 'edxapp', celery_worker: True }
     - edxapp
     - notifier
-    - analytics_api
-    - insights
-    # not ready yet: - edx_notes_api
-    - demo
+    - edx_notes_api
     - oauth_client_setup
     - oraclejdk
     - role: elasticsearch
