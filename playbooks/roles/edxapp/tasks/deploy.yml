@@ -52,12 +52,12 @@
 
 # Do A Checkout
 - name: checkout edx-platform repo into {{ edxapp_code_dir }}
-  git_2_0_1:
-    dest: "{{ edxapp_code_dir }}"
-    repo: "{{ edx_platform_repo }}"
-    version: "{{ edx_platform_version }}"
-    accept_hostkey: yes
-  become_user: "{{ edxapp_user }}"
+  git_2_0_1: >
+    dest={{ edxapp_code_dir }}
+    repo={{ edx_platform_repo }}
+    version={{ edx_platform_version }}
+    accept_hostkey=yes
+  sudo_user: "{{ edxapp_user }}"
   environment:
     GIT_SSH: "{{ edxapp_git_ssh }}"
   register: edxapp_platform_checkout
@@ -72,7 +72,13 @@
     - install
     - install:code
 
-- name: checkout theme
+# edX supports two theme types, Comprehensive themes and the older
+# Stanford-style themes. They are mutually exclusive.
+#
+# To enable Stanford theming, point edxapp_theme_source_repo
+# (yes, lowercase) to a Stanford-style theme and set
+# edxapp_theme_name (again, lowercase) to its name.
+- name: checkout Stanford-style theme
   git_2_0_1: >
     dest={{ edxapp_app_dir }}/themes/{{ edxapp_theme_name }}
     repo={{ edxapp_theme_source_repo }}
@@ -92,11 +98,11 @@
 # EDXAPP_COMPREHENSIVE_THEME_DIR to the directory you want to check
 # out to.
 - name: checkout comprehensive theme
-  git_2_0_1:
-    dest: "{{ EDXAPP_COMPREHENSIVE_THEME_DIR }}"
-    repo: "{{ EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO }}"
-    version: "{{ EDXAPP_COMPREHENSIVE_THEME_VERSION }}"
-    accept_hostkey: yes
+  git_2_0_1: >
+    dest={{ EDXAPP_COMPREHENSIVE_THEME_DIR }}
+    repo={{ EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO }}
+    version={{ EDXAPP_COMPREHENSIVE_THEME_VERSION }}
+    accept_hostkey=yes
   when: EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO != ''
   become_user: "{{ edxapp_user }}"
   environment:
