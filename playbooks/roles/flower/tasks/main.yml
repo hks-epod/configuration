@@ -37,42 +37,42 @@
   notify:
     - "restart flower"
 
-- name: create virtualenv and install Python requirements
-  pip: >
-    name="{{ item }}"
-    virtualenv="{{ flower_venv_dir }}"
-    state=present
-    extra_args="-i {{ COMMON_PYPI_MIRROR_URL }}"
-  sudo_user: "{{ FLOWER_USER }}"
+- name: Create virtualenv and install Python requirements
+  pip:
+    name: "{{ item }}"
+    virtualenv: "{{ flower_venv_dir }}"
+    state: present
+    extra_args: "-i {{ COMMON_PYPI_MIRROR_URL }}"
+  become_user: "{{ FLOWER_USER }}"
   environment: "{{ flower_environment }}"
   with_items: "flower_python_reqs"
   notify:
     - "restart flower"
 
-- name: create supervisor configuration
-  template: >
-    src=edx/app/supervisor/conf.d.available/flower.conf.j2
-    dest={{ supervisor_available_dir }}/{{ FLOWER_USER }}.conf
-    owner={{ supervisor_user }}
-    group={{ supervisor_user }}
-  sudo_user: "{{ supervisor_user }}"
+- name: Create supervisor configuration
+  template:
+    src: "edx/app/supervisor/conf.d.available/flower.conf.j2"
+    dest: "{{ supervisor_available_dir }}/{{ FLOWER_USER }}.conf"
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_user }}"
+  become_user: "{{ supervisor_user }}"
   notify:
     - "restart flower"
 
-- name: enable supervisor configuration
-  file: >
-    src={{ supervisor_available_dir }}/{{ FLOWER_USER }}.conf
-    dest={{ supervisor_cfg_dir }}/{{ FLOWER_USER }}.conf
-    state=link
-    force=yes
-  sudo_user: "{{ supervisor_user }}"
+- name: Enable supervisor configuration
+  file:
+    src: "{{ supervisor_available_dir }}/{{ FLOWER_USER }}.conf"
+    dest: "{{ supervisor_cfg_dir }}/{{ FLOWER_USER }}.conf"
+    state: link
+    force: yes
+  become_user: "{{ supervisor_user }}"
   notify:
     - "restart flower"
 
 - name: update supervisor configuration
   shell:  "{{ supervisor_ctl }} -c {{ supervisor_cfg }} update"
   register: supervisor_update
-  sudo_user: "{{ supervisor_service_user }}"
+  become_user: "{{ supervisor_service_user }}"
   changed_when: supervisor_update.stdout is defined and supervisor_update.stdout != ""
   notify:
     - "restart flower"

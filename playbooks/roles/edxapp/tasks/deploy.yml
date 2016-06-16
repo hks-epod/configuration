@@ -45,19 +45,19 @@
 
 - name: set git fetch.prune to ignore deleted remote refs
   shell: git config --global fetch.prune true
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   tags:
     - install
     - install:base
 
 # Do A Checkout
 - name: checkout edx-platform repo into {{ edxapp_code_dir }}
-  git_2_0_1: >
-    dest={{ edxapp_code_dir }}
-    repo={{ edx_platform_repo }}
-    version={{ edx_platform_version }}
-    accept_hostkey=yes
-  sudo_user: "{{ edxapp_user }}"
+  git_2_0_1:
+    dest: "{{ edxapp_code_dir }}"
+    repo: "{{ edx_platform_repo }}"
+    version: "{{ edx_platform_version }}"
+    accept_hostkey: yes
+  become_user: "{{ edxapp_user }}"
   environment:
     GIT_SSH: "{{ edxapp_git_ssh }}"
   register: edxapp_platform_checkout
@@ -67,7 +67,7 @@
 
 - name: git clean after checking out edx-platform
   shell: cd {{ edxapp_code_dir }} && git clean -xdf
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   tags:
     - install
     - install:code
@@ -79,10 +79,29 @@
     version={{ edxapp_theme_version }}
     accept_hostkey=yes
   when: edxapp_theme_name != ''
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   environment:
     GIT_SSH: "{{ edxapp_git_ssh }}"
   register: edxapp_theme_checkout
+  tags:
+    - install
+    - install:code
+
+# To enable Comprehensive theming, point
+# EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO to your theme repo, and set
+# EDXAPP_COMPREHENSIVE_THEME_DIR to the directory you want to check
+# out to.
+- name: checkout comprehensive theme
+  git_2_0_1:
+    dest: "{{ EDXAPP_COMPREHENSIVE_THEME_DIR }}"
+    repo: "{{ EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO }}"
+    version: "{{ EDXAPP_COMPREHENSIVE_THEME_VERSION }}"
+    accept_hostkey: yes
+  when: EDXAPP_COMPREHENSIVE_THEME_SOURCE_REPO != ''
+  become_user: "{{ edxapp_user }}"
+  environment:
+    GIT_SSH: "{{ edxapp_git_ssh }}"
+  register: edxapp_comprehensive_theme_checkout
   tags:
     - install
     - install:code
@@ -101,7 +120,7 @@
 - name: Updating requirement files for git mirror
   command: |
     /bin/sed -i -e 's/github\.com/{{ COMMON_GIT_MIRROR }}/g' {{ item.item }}
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   when: item.stat.exists
   with_items: "{{ requirement_file_stats.results }}"
   tags:
@@ -156,7 +175,7 @@
 # Node play that need to be run after platform updates.
 - name: Install edx-platform npm dependencies
   shell: npm install chdir={{ edxapp_code_dir }}
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   environment: "{{ edxapp_environment }}"
   tags:
     - install
@@ -167,7 +186,7 @@
     virtualenv {{ edxapp_venv_dir }}
     chdir={{ edxapp_code_dir }}
     creates={{ edxapp_venv_dir }}/bin/pip
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   environment: "{{ edxapp_environment }}"
   tags:
     - install
@@ -189,7 +208,7 @@
   command: >
     {{ edxapp_venv_dir }}/bin/pip install -i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w -r {{ item.item }}
     chdir={{ edxapp_code_dir }}
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   environment: "{{ edxapp_environment }}"
   when: item.stat.exists
   with_items: "{{ python_requirement_files.results }}"
@@ -208,7 +227,7 @@
     chdir={{ edxapp_code_dir }}
   with_items:
   - "{{ private_requirements_file }}"
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   environment:
     GIT_SSH: "{{ edxapp_git_ssh }}"
   when: EDXAPP_INSTALL_PRIVATE_REQUIREMENTS
@@ -225,7 +244,7 @@
     virtualenv="{{ edxapp_venv_dir }}"
     state=present
   with_items: EDXAPP_EXTRA_REQUIREMENTS
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   tags:
     - install
     - install:app-requirements
@@ -233,12 +252,12 @@
 # If using CAS and you have a function for mapping attributes, install
 # the module here.  The next few tasks set up the python code sandbox
 - name: install CAS attribute module
-  pip: >
-    name="{{ EDXAPP_CAS_ATTRIBUTE_PACKAGE }}"
-    virtualenv="{{ edxapp_venv_dir }}"
-    state=present
-    extra_args="-i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w"
-  sudo_user: "{{ edxapp_user }}"
+  pip:
+    name: "{{ EDXAPP_CAS_ATTRIBUTE_PACKAGE }}"
+    virtualenv: "{{ edxapp_venv_dir }}"
+    state: present
+    extra_args: "-i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w"
+  become_user: "{{ edxapp_user }}"
   when: EDXAPP_CAS_ATTRIBUTE_PACKAGE|length > 0
   tags:
     - install
@@ -256,7 +275,7 @@
   - "{{ sandbox_base_requirements }}"
   - "{{ sandbox_local_requirements }}"
   - "{{ sandbox_post_requirements }}"
-  sudo_user: "{{ edxapp_user }}"
+  become_user: "{{ edxapp_user }}"
   when: not EDXAPP_PYTHON_SANDBOX
   tags:
     - install
@@ -275,12 +294,12 @@
   - install:app-requirements
 
 - name: code sandbox | Install base sandbox requirements and create sandbox virtualenv
-  pip: >
-    requirements="{{ sandbox_base_requirements }}"
-    virtualenv="{{ edxapp_sandbox_venv_dir }}"
-    state=present
-    extra_args="-i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w"
-  sudo_user: "{{ edxapp_sandbox_user }}"
+  pip:
+    requirements: "{{ sandbox_base_requirements }}"
+    virtualenv: "{{ edxapp_sandbox_venv_dir }}"
+    state: present
+    extra_args: "-i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w"
+  become_user: "{{ edxapp_sandbox_user }}"
   when: EDXAPP_PYTHON_SANDBOX
   tags:
   - edxapp-sandbox
@@ -292,9 +311,9 @@
     {{ edxapp_sandbox_venv_dir }}/bin/pip install -i {{ COMMON_PYPI_MIRROR_URL }} --exists-action w -r {{ item }}
     chdir={{ edxapp_code_dir }}
   with_items:
-  - "{{ sandbox_local_requirements }}"
-  - "{{ sandbox_post_requirements }}"
-  sudo_user: "{{ edxapp_sandbox_user }}"
+    - "{{ sandbox_local_requirements }}"
+    - "{{ sandbox_post_requirements }}"
+  become_user: "{{ edxapp_sandbox_user }}"
   when: EDXAPP_PYTHON_SANDBOX
   register: sandbox_install_output
   changed_when: sandbox_install_output.stdout is defined and 'installed' in sandbox_install_output.stdout
@@ -312,8 +331,8 @@
   - install:app-requirements
 
 - name: compiling all py files in the edx-platform repo
-  shell: "{{ edxapp_venv_bin }}/python -m compileall -x .git/.* {{ edxapp_code_dir }}"
-  sudo_user: "{{ edxapp_user }}"
+  shell: "{{ edxapp_venv_bin }}/python -m compileall -q -x .git/.* {{ edxapp_code_dir }}"
+  become_user: "{{ edxapp_user }}"
   tags:
     - install
     - install:code
@@ -354,19 +373,19 @@
 - name: update supervisor configuration
   shell:  "{{ supervisor_ctl }} -c {{ supervisor_cfg }} update"
   register: supervisor_update
-  sudo_user: "{{ supervisor_service_user }}"
+  become_user: "{{ supervisor_service_user }}"
   changed_when: supervisor_update.stdout is defined and supervisor_update.stdout != ""
   when: not disable_edx_services
   tags:
     - manage
 
 - name: ensure edxapp has started
-  supervisorctl: >
-    state=started
-    supervisorctl_path={{ supervisor_ctl }}
-    config={{ supervisor_cfg }}
-    name="edxapp:{{ item }}"
-  sudo_user: "{{ supervisor_service_user }}"
+  supervisorctl:
+    name: "edxapp:"
+    supervisorctl_path: "{{ supervisor_ctl }}"
+    config: "{{ supervisor_cfg }}"
+    state: started
+  become_user: "{{ supervisor_service_user }}"
   when: celery_worker is not defined and not disable_edx_services
   with_items: service_variants_enabled
   tags:
@@ -379,8 +398,7 @@
     config={{ supervisor_cfg }}
     state=started
   when: celery_worker is defined and not disable_edx_services
-  with_items: edxapp_workers
-  sudo_user: "{{ supervisor_service_user }}"
+  become_user: "{{ supervisor_service_user }}"
   tags:
     - manage
 
@@ -431,8 +449,7 @@
     config={{ supervisor_cfg }}
     name="edxapp:{{ item }}"
   when: edxapp_installed is defined and celery_worker is not defined and not disable_edx_services
-  sudo_user: "{{ supervisor_service_user }}"
-  with_items: service_variants_enabled
+  become_user: "{{ supervisor_service_user }}"
   tags:
     - manage
 
@@ -443,7 +460,6 @@
     config={{ supervisor_cfg }}
     state=restarted
   when: edxapp_installed is defined and celery_worker is defined and not disable_edx_services
-  with_items: edxapp_workers
-  sudo_user: "{{ common_web_user }}"
+  become_user: "{{ common_web_user }}"
   tags:
     - manage
