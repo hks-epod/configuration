@@ -393,7 +393,6 @@
     state: started
   become_user: "{{ supervisor_service_user }}"
   when: celery_worker is not defined and not disable_edx_services
-  with_items: service_variants_enabled
   tags:
     - manage
 
@@ -456,6 +455,7 @@
     name="edxapp:{{ item }}"
   when: edxapp_installed is defined and celery_worker is not defined and not disable_edx_services
   become_user: "{{ supervisor_service_user }}"
+  with_items: service_variants_enabled
   tags:
     - manage
 
