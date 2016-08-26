@@ -3,8 +3,8 @@
 # edX Configuration
 #
 # github:     https://github.com/edx/configuration
-# wiki:       https://github.com/edx/configuration/wiki
-# code style: https://github.com/edx/configuration/wiki/Ansible-Coding-Conventions
+# wiki:       https://openedx.atlassian.net/wiki/display/OpenOPS
+# code style: https://openedx.atlassian.net/wiki/display/OpenOPS/Ansible+Code+Conventions
 # license:    https://github.com/edx/configuration/blob/master/LICENSE.TXT
 #
 ##
@@ -36,6 +36,7 @@ PROGRAMS_DATABASES:
 PROGRAMS_VERSION: "master"
 PROGRAMS_DJANGO_SETTINGS_MODULE: "programs.settings.production"
 PROGRAMS_URL_ROOT: 'http://localhost:8004'
+PROGRAMS_LOGOUT_URL: '{{ PROGRAMS_URL_ROOT }}/accounts/logout/'
 PROGRAMS_LMS_URL_ROOT: 'http://127.0.0.1:8000'
 
 PROGRAMS_SECRET_KEY: 'Your secret key here'
@@ -46,6 +47,8 @@ PROGRAMS_LANGUAGE_CODE: 'en-us'
 PROGRAMS_SOCIAL_AUTH_EDX_OIDC_KEY : 'programs-key'
 PROGRAMS_SOCIAL_AUTH_EDX_OIDC_SECRET : 'programs-secret'
 PROGRAMS_SOCIAL_AUTH_REDIRECT_IS_HTTPS: false
+PROGRAMS_SOCIAL_AUTH_EDX_OIDC_URL_ROOT: '{{ PROGRAMS_LMS_URL_ROOT }}/oauth2'
+PROGRAMS_SOCIAL_AUTH_EDX_OIDC_LOGOUT_URL: '{{ PROGRAMS_LMS_URL_ROOT }}/logout'
 
 PROGRAMS_PLATFORM_NAME: 'Your Platform Name Here'
 
@@ -61,7 +64,8 @@ PROGRAMS_SERVICE_CONFIG:
   SOCIAL_AUTH_EDX_OIDC_KEY: '{{ PROGRAMS_SOCIAL_AUTH_EDX_OIDC_KEY }}'
   SOCIAL_AUTH_EDX_OIDC_SECRET: '{{ PROGRAMS_SOCIAL_AUTH_EDX_OIDC_SECRET }}'
   SOCIAL_AUTH_EDX_OIDC_ID_TOKEN_DECRYPTION_KEY: '{{ PROGRAMS_SOCIAL_AUTH_EDX_OIDC_SECRET }}'
-  SOCIAL_AUTH_EDX_OIDC_URL_ROOT: '{{ PROGRAMS_LMS_URL_ROOT }}/oauth2'
+  SOCIAL_AUTH_EDX_OIDC_URL_ROOT: '{{ PROGRAMS_SOCIAL_AUTH_EDX_OIDC_URL_ROOT }}'
+  SOCIAL_AUTH_EDX_OIDC_LOGOUT_URL: '{{ PROGRAMS_SOCIAL_AUTH_EDX_OIDC_LOGOUT_URL }}'
   SOCIAL_AUTH_REDIRECT_IS_HTTPS: '{{ PROGRAMS_SOCIAL_AUTH_REDIRECT_IS_HTTPS }}'
 
   STATIC_ROOT: "{{ COMMON_DATA_DIR }}/{{ programs_service_name }}/staticfiles"

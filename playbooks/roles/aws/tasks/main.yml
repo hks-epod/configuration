@@ -3,8 +3,8 @@
 # edX Configuration
 #
 # github:     https://github.com/edx/configuration
-# wiki:       https://github.com/edx/configuration/wiki
-# code style: https://github.com/edx/configuration/wiki/Ansible-Coding-Conventions
+# wiki:       https://openedx.atlassian.net/wiki/display/OpenOPS
+# code style: https://openedx.atlassian.net/wiki/display/OpenOPS/Ansible+Code+Conventions
 # license:    https://github.com/edx/configuration/blob/master/LICENSE.TXT
 #
 #
@@ -141,5 +141,12 @@
 
 - name: restart ssh
   service: name=ssh state=restarted
-  sudo: True
+  become: True
   when: sshd_config.changed
+  when: ansible_distribution in common_debian_variants
+
+- name: restart ssh
+  service: name=sshd state=restarted
+  become: True
+  when: sshd_config.changed
+  when: ansible_distribution in common_redhat_variants

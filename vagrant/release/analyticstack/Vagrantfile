@@ -21,12 +21,18 @@ ansible-playbook -i localhost, -c local vagrant-analytics.yml -e configuration_v
 
 SCRIPT
 
-edx_platform_mount_dir = "edx-platform"
-themes_mount_dir = "themes"
-forum_mount_dir = "cs_comments_service"
-insights_mount_dir = "insights"
-analytics_api_mount_dir = "analytics_api"
+MOUNT_DIRS = {
+  :edx_platform => {:repo => "edx-platform", :local => "/edx/app/edxapp/edx-platform", :owner => "edxapp"},
+  :themes => {:repo => "themes", :local => "/edx/app/edxapp/themes", :owner => "edxapp"},
+  :forum => {:repo => "cs_comments_service", :local => "/edx/app/forum/cs_comments_service", :owner => "forum"},
+  :insights => {:repo => "insights", :local => "/edx/app/insights/edx_analytics_dashboard", :owner => "insights"},
+  :analytics_api => {:repo => "analytics_api", :local => "/edx/app/analytics_api/analytics_api", :owner => "analytics_api"},
+  :analytics_pipeline => {:repo => "edx-analytics-pipeline", :local => "/edx/app/analytics_pipeline/analytics_pipeline", :owner => "hadoop"},
+  # This src directory won't have useful permissions. You can set them from the
+  # vagrant user in the guest OS. "sudo chmod 0777 /edx/src" is useful.
+  :src => {:repo => "src", :local => "/edx/src", :owner => "root"},
 
+}
 if ENV['VAGRANT_MOUNT_BASE']
 
   edx_platform_mount_dir = ENV['VAGRANT_MOUNT_BASE'] + "/" + edx_platform_mount_dir
