@@ -30,7 +30,6 @@
       - xqueue
       nginx_default_sites:
       - lms
-    - aws
     - mysql
     - edxlocal
     - role: mongo
