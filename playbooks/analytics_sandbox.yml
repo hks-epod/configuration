@@ -17,6 +17,7 @@
     - role: nginx
       nginx_sites:
         - insights
+        - analytics_api
     - insights
   tasks:
     - name: 'Install required packages'
