@@ -23,6 +23,7 @@
     - role: nginx
       nginx_sites:
         - insights
+        - analytics_api
     - analytics_api
     - insights
     - role: postfix_queue
