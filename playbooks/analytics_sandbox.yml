@@ -23,8 +23,10 @@
     - role: nginx
       nginx_sites:
         - insights
-        - analytics_api
     - analytics_api
+    - role: nginx
+      nginx_sites:
+        - analytics_api
     - insights
     - role: postfix_queue
       when: POSTFIX_QUEUE_EXTERNAL_SMTP_HOST != ''
