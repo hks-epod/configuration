@@ -74,7 +74,8 @@
       nginx_sites:
       - edx_notes_api
       when: EDX_NOTES_API_ENABLED
-    - demo
+    - role: demo
+      when: COMMON_ENABLE_DEMO_ROLE
     - oauth_client_setup
     - oraclejdk
     - role: elasticsearch
